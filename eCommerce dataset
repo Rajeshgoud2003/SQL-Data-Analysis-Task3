@@ -1,0 +1,157 @@
+-- Create Customers table
+CREATE TABLE Customers (
+    customer_id INT PRIMARY KEY,
+    customer_name VARCHAR(100),
+    email VARCHAR(100),
+    country VARCHAR(50)
+);
+
+-- Create Products table
+CREATE TABLE Products (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR(100),
+    category VARCHAR(50),
+    price DECIMAL(10,2)
+);
+
+-- Create Orders table
+CREATE TABLE Orders (
+    order_id INT PRIMARY KEY,
+    customer_id INT,
+    product_id INT,
+    quantity INT,
+    order_date DATE,
+    FOREIGN KEY (customer_id) REFERENCES Customers(customer_id),
+    FOREIGN KEY (product_id) REFERENCES Products(product_id)
+);
+
+-- Insert into Customers
+INSERT INTO Customers VALUES
+(1, 'Alice', 'alice@email.com', 'USA'),
+(2, 'Bob', 'bob@email.com', 'UK'),
+(3, 'Charlie', 'charlie@email.com', 'India');
+
+-- Insert into Products
+INSERT INTO Products VALUES
+(1, 'Laptop', 'Electronics', 800),
+(2, 'Headphones', 'Electronics', 100),
+(3, 'Book', 'Books', 20);
+
+-- Insert into Orders
+INSERT INTO Orders VALUES
+(1, 1, 1, 1, '2023-01-05'),
+(2, 2, 2, 2, '2023-01-06'),
+(3, 3, 3, 3, '2023-01-07'),
+(4, 1, 2, 1, '2023-01-08');
+
+
+select * from customer;
+
+SELECT Orders.*
+FROM Orders
+JOIN Customers ON Orders.customer_id = Customers.customer_id
+WHERE Customers.country = 'USA';
+
+SELECT * FROM Products
+WHERE category = 'Electronics'
+ORDER BY price DESC;
+
+SELECT product_id, SUM(quantity) AS total_quantity
+FROM Orders
+GROUP BY product_id;
+
+SELECT 
+    o.product_id,
+    p.product_name,
+    SUM(o.quantity * p.price) AS total_revenue
+FROM Orders o
+JOIN Products p ON o.product_id = p.product_id
+GROUP BY o.product_id, p.product_name;
+
+
+SELECT 
+    o.order_id,
+    c.customer_name,
+    p.product_name,
+    o.quantity,
+    o.order_date
+FROM Orders o
+INNER JOIN Customers c ON o.customer_id = c.customer_id
+INNER JOIN Products p ON o.product_id = p.product_id;
+
+
+SELECT 
+    c.customer_name,
+    o.order_id,
+    o.order_date
+FROM Customers c
+LEFT JOIN Orders o ON c.customer_id = o.customer_id;
+
+SELECT 
+    o.order_id,
+    o.order_date,
+    c.customer_name
+FROM Orders o
+RIGHT JOIN Customers c ON o.customer_id = c.customer_id;
+
+SELECT customer_id
+FROM Orders
+WHERE quantity > 1;
+
+SELECT *
+FROM Products
+WHERE price = (
+    SELECT MAX(price) FROM Products
+);
+
+SELECT o.order_id, o.customer_id, o.product_id, o.quantity, (o.quantity * p.price) AS total_amount
+FROM Orders o
+JOIN Products p ON o.product_id = p.product_id
+WHERE (o.quantity * p.price) > (
+    SELECT AVG(o2.quantity * p2.price)
+    FROM Orders o2
+    JOIN Products p2 ON o2.product_id = p2.product_id
+);
+
+
+SELECT 
+    AVG(o.quantity * p.price) AS avg_order_revenue
+FROM Orders o
+JOIN Products p ON o.product_id = p.product_id;
+
+
+SELECT 
+    c.customer_name,
+    SUM(o.quantity * p.price) AS total_revenue
+FROM Orders o
+JOIN Customers c ON o.customer_id = c.customer_id
+JOIN Products p ON o.product_id = p.product_id
+GROUP BY c.customer_name;
+
+
+CREATE VIEW OrderRevenue AS
+SELECT 
+    o.order_id,
+    c.customer_name,
+    p.product_name,
+    o.quantity,
+    p.price,
+    (o.quantity * p.price) AS revenue,
+    o.order_date
+FROM Orders o
+JOIN Customers c ON o.customer_id = c.customer_id
+JOIN Products p ON o.product_id = p.product_id;
+
+Select * from OrderRevenue;
+
+
+-- Index for customer_id in Orders
+CREATE INDEX idx_orders_customer_id ON Orders(customer_id);
+
+-- Index for product_id in Orders
+CREATE INDEX idx_orders_product_id ON Orders(product_id);
+
+-- Index for category in Products
+CREATE INDEX idx_products_category ON Products(category);
+
+
